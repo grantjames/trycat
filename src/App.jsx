@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import BackspaceRoundedIcon from '@mui/icons-material/BackspaceRounded';
+import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import CelebrationRoundedIcon from '@mui/icons-material/CelebrationRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import KeyboardReturnRoundedIcon from '@mui/icons-material/KeyboardReturnRounded';
@@ -26,6 +27,7 @@ import SetMealRoundedIcon from '@mui/icons-material/SetMealRounded';
 import {
   createGame,
   getBoardRows,
+  getGameStats,
   getKeyboardState,
   getLocalDateKey,
   getStorageKey,
@@ -98,6 +100,7 @@ function App() {
     initialModePreference.needsChoice,
   );
   const [daily, setDaily] = useState(createDailyState);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(
     () => readStorage('trycat-rules-seen') !== 'true',
   );
@@ -105,6 +108,15 @@ function App() {
   const game = daily.games[mode];
   const boardRows = useMemo(() => getBoardRows(game), [game]);
   const keyboardState = useMemo(() => getKeyboardState(game), [game]);
+  const stats = useMemo(() => Object.fromEntries(MODES.map((length) => [
+    length,
+    getGameStats(
+      length,
+      (key) => key === getStorageKey(length, daily.dayKey)
+        ? JSON.stringify(daily.games[length])
+        : readStorage(key),
+    ),
+  ])), [daily]);
 
   const refreshDay = useCallback(() => {
     const now = new Date();
@@ -196,7 +208,7 @@ function App() {
 
   useEffect(() => {
     const handlePhysicalKey = (event) => {
-      if (modeChoiceOpen || rulesOpen || daily.finished) return;
+      if (modeChoiceOpen || rulesOpen || statsOpen || daily.finished) return;
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -213,7 +225,7 @@ function App() {
 
     window.addEventListener('keydown', handlePhysicalKey);
     return () => window.removeEventListener('keydown', handlePhysicalKey);
-  }, [daily.finished, handleKey, modeChoiceOpen, rulesOpen]);
+  }, [daily.finished, handleKey, modeChoiceOpen, rulesOpen, statsOpen]);
 
   const selectMode = (nextMode) => {
     setMode(nextMode);
@@ -244,8 +256,8 @@ function App() {
         <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 3 }, minHeight: { xs: 56, sm: 64 } }}>
           <Stack direction="row" spacing={{ xs: 0.5, sm: 1 }} sx={{ alignItems: 'center' }}>
             {mode === 3
-              ? <PetsRoundedIcon sx={{ fontSize: { xs: 26, sm: 30 } }} />
-              : <SetMealRoundedIcon sx={{ fontSize: { xs: 26, sm: 30 } }} />}
+              ? <PetsRoundedIcon sx={{ display: { xs: 'none', sm: 'block' }, fontSize: { sm: 30 } }} />
+              : <SetMealRoundedIcon sx={{ display: { xs: 'none', sm: 'block' }, fontSize: { sm: 30 } }} />}
             <Typography component="h1" variant="h5" sx={{ fontWeight: 900, letterSpacing: 0, fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
               {mode === 3 ? 'Try Cat' : 'Try Fish'}
             </Typography>
@@ -269,6 +281,16 @@ function App() {
                 </IconButton>
               </Tooltip>
             )}
+            <Tooltip title="Statistics">
+              <IconButton
+                size="small"
+                color="inherit"
+                onClick={() => setStatsOpen(true)}
+                aria-label="Statistics"
+              >
+                <BarChartRoundedIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title={`Switch to ${mode === 3 ? 'Try Fish' : 'Try Cat'}`}>
               <IconButton
                 size="small"
@@ -429,6 +451,85 @@ function App() {
         </DialogContent>
         <DialogActions>
           <Button variant="contained" onClick={closeRules} autoFocus>Let&apos;s play</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={statsOpen && !modeChoiceOpen && !daily.finished}
+        onClose={() => setStatsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        aria-labelledby="statistics-title"
+      >
+        <DialogTitle id="statistics-title">
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <BarChartRoundedIcon color="primary" />
+            <Typography component="span" variant="h6" sx={{ fontWeight: 900 }}>
+              Statistics
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+            }}
+          >
+            {MODES.map((length) => {
+              const modeStats = stats[length];
+              const statItems = [
+                ['Solved', modeStats.solved],
+                ['Average guesses', modeStats.averageGuesses === null
+                  ? '-'
+                  : modeStats.averageGuesses.toFixed(1)],
+                ['Failed', modeStats.failed],
+                ['Missed', modeStats.missed],
+              ];
+
+              return (
+                <Box
+                  component="section"
+                  aria-labelledby={`stats-mode-${length}`}
+                  key={length}
+                  sx={{
+                    px: { xs: 0, sm: 2.5 },
+                    py: { xs: 2, sm: 1 },
+                    borderBottom: { xs: length === 3 ? '1px solid' : 0, sm: 0 },
+                    borderRight: { xs: 0, sm: length === 3 ? '1px solid' : 0 },
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 2 }}>
+                    {length === 3
+                      ? <PetsRoundedIcon color="primary" />
+                      : <SetMealRoundedIcon color="secondary" />}
+                    <Typography id={`stats-mode-${length}`} variant="h6" sx={{ fontWeight: 900 }}>
+                      {length === 3 ? 'Try Cat' : 'Try Fish'}
+                    </Typography>
+                  </Stack>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                    {statItems.map(([label, value]) => (
+                      <Box key={label} sx={{ textAlign: 'center' }}>
+                        <Typography variant="h4" sx={{ fontWeight: 900 }}>
+                          {value}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+                          {label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2.5, textAlign: 'center' }}>
+            Average guesses is based on solved games. Missed means no attempt was made.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={() => setStatsOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
 

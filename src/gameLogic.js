@@ -1,4 +1,9 @@
-import { getDailyWord, isValidGuess } from './wordBank.js';
+import {
+  TOTAL_DAILY_WORDS,
+  getDailyWord,
+  getDailyWordProgress,
+  isValidGuess,
+} from './wordBank.js';
 
 export const MAX_GUESSES = 6;
 
@@ -11,6 +16,53 @@ export function getLocalDateKey(date = new Date()) {
 
 export function getStorageKey(length, dayKey) {
   return `trycat-${length}-${dayKey}`;
+}
+
+export function getGameStats(length, readSavedGame, today = new Date()) {
+  const progress = getDailyWordProgress(today);
+  const lastDayIndex = progress.finished
+    ? TOTAL_DAILY_WORDS - 1
+    : Math.min(progress.dayIndex, TOTAL_DAILY_WORDS - 1);
+  const currentDayIndex = progress.finished ? -1 : progress.dayIndex;
+  let solved = 0;
+  let failed = 0;
+  let missed = 0;
+  let guessesForSolvedGames = 0;
+
+  for (let dayIndex = 0; dayIndex <= lastDayIndex; dayIndex += 1) {
+    const date = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - (progress.dayIndex - dayIndex),
+      12,
+    );
+    const serializedGame = readSavedGame(getStorageKey(length, getLocalDateKey(date)));
+    const game = restoreGame(length, serializedGame, date);
+
+    if (game.status === 'won') {
+      solved += 1;
+      guessesForSolvedGames += game.guesses.length;
+      continue;
+    }
+
+    if (game.status === 'lost') {
+      failed += 1;
+      continue;
+    }
+
+    if (dayIndex !== currentDayIndex) {
+      const attempted = game.guesses.length > 0 || game.currentGuess.length > 0;
+      if (attempted) failed += 1;
+      else missed += 1;
+    }
+  }
+
+  return {
+    solved,
+    averageGuesses: solved === 0 ? null : guessesForSolvedGames / solved,
+    failed,
+    missed,
+  };
 }
 
 export function getLetterStatus(guess, answer) {

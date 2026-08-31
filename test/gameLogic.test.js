@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import {
   createGame,
   getBoardRows,
+  getGameStats,
   getKeyboardState,
   getLetterStatus,
   getLocalDateKey,
+  getStorageKey,
   restoreGame,
   submitGuess,
 } from '../src/gameLogic.js';
@@ -139,6 +141,43 @@ test('keyboard state is derived only from the current game', () => {
   const played = { ...createGame(3, START_DATE), guesses: ['sun'] };
   assert.deepEqual(Object.keys(getKeyboardState(createGame(4, START_DATE))), []);
   assert.deepEqual(Object.keys(getKeyboardState(played)).sort(), ['N', 'S', 'U']);
+});
+
+test('game stats separate solved, failed, missed, and current unplayed days', () => {
+  const today = new Date(2026, 8, 3, 12);
+  const savedGames = new Map();
+  const firstAnswer = getDailyWord(3, START_DATE);
+  const firstWrongGuess = DAILY_WORDS_3.find((word) => word !== firstAnswer);
+  const secondDate = new Date(2026, 8, 1, 12);
+  const secondAnswer = getDailyWord(3, secondDate);
+  const secondWrongGuess = DAILY_WORDS_3.find((word) => word !== secondAnswer);
+  const currentAnswer = getDailyWord(3, today);
+  const currentWrongGuesses = DAILY_WORDS_3
+    .filter((word) => word !== currentAnswer)
+    .slice(0, 6);
+
+  savedGames.set(getStorageKey(3, '2026-08-31'), JSON.stringify({
+    guesses: [firstWrongGuess, firstAnswer],
+  }));
+  savedGames.set(getStorageKey(3, '2026-09-01'), JSON.stringify({
+    guesses: [secondWrongGuess],
+  }));
+  savedGames.set(getStorageKey(3, '2026-09-03'), JSON.stringify({
+    guesses: currentWrongGuesses,
+  }));
+
+  assert.deepEqual(getGameStats(3, (key) => savedGames.get(key) ?? null, today), {
+    solved: 1,
+    averageGuesses: 2,
+    failed: 2,
+    missed: 1,
+  });
+  assert.deepEqual(getGameStats(4, () => null, today), {
+    solved: 0,
+    averageGuesses: null,
+    failed: 0,
+    missed: 3,
+  });
 });
 
 test('guess validation uses broad dictionaries separate from daily answers', () => {
