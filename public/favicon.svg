@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Try Cat and Try Fish word tiles">
+  <rect width="512" height="512" rx="80" fill="#f6fbff"/>
+  <rect x="8" y="8" width="496" height="496" rx="72" fill="none" stroke="#1d2733" stroke-width="16"/>
+  <g font-family="Arial, sans-serif" font-weight="800" text-anchor="middle">
+    <g font-size="92" fill="#173d2a">
+      <rect x="58" y="78" width="120" height="120" rx="14" fill="#b7e4c7" stroke="#287a4b" stroke-width="8"/>
+      <rect x="196" y="78" width="120" height="120" rx="14" fill="#b7e4c7" stroke="#287a4b" stroke-width="8"/>
+      <rect x="334" y="78" width="120" height="120" rx="14" fill="#b7e4c7" stroke="#287a4b" stroke-width="8"/>
+      <text x="118" y="169">C</text>
+      <text x="256" y="169">A</text>
+      <text x="394" y="169">T</text>
+    </g>
+    <g font-size="72" fill="#473500">
+      <rect x="30" y="292" width="102" height="102" rx="12" fill="#ffe08a" stroke="#9a6b00" stroke-width="7"/>
+      <rect x="147" y="292" width="102" height="102" rx="12" fill="#ffe08a" stroke="#9a6b00" stroke-width="7"/>
+      <rect x="264" y="292" width="102" height="102" rx="12" fill="#ffe08a" stroke="#9a6b00" stroke-width="7"/>
+      <rect x="381" y="292" width="102" height="102" rx="12" fill="#ffe08a" stroke="#9a6b00" stroke-width="7"/>
+      <text x="81" y="370">F</text>
+      <text x="198" y="370">I</text>
+      <text x="315" y="370">S</text>
+      <text x="432" y="370">H</text>
+    </g>
+  </g>
+</svg>
