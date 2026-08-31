@@ -13,8 +13,6 @@ import {
   IconButton,
   Paper,
   Stack,
-  Tab,
-  Tabs,
   Toolbar,
   Tooltip,
   Typography,
@@ -203,8 +201,8 @@ function App() {
     return () => window.removeEventListener('keydown', handlePhysicalKey);
   }, [daily.finished, handleKey, rulesOpen]);
 
-  const selectMode = (_, nextMode) => {
-    setMode(nextMode);
+  const toggleMode = () => {
+    setMode((currentMode) => currentMode === 3 ? 4 : 3);
   };
 
   const closeRules = () => {
@@ -223,12 +221,12 @@ function App() {
   return (
     <Box sx={{ minHeight: '100dvh', bgcolor: 'background.default', color: 'text.primary' }}>
       <AppBar position="sticky" color="primary" elevation={2}>
-        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1.5, sm: 3 }, minHeight: 64 }}>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 3 }, minHeight: { xs: 56, sm: 64 } }}>
+          <Stack direction="row" spacing={{ xs: 0.5, sm: 1 }} sx={{ alignItems: 'center' }}>
             {mode === 3
-              ? <PetsRoundedIcon sx={{ fontSize: 30 }} />
-              : <SetMealRoundedIcon sx={{ fontSize: 30 }} />}
-            <Typography component="h1" variant="h5" sx={{ fontWeight: 900, letterSpacing: 0 }}>
+              ? <PetsRoundedIcon sx={{ fontSize: { xs: 26, sm: 30 } }} />
+              : <SetMealRoundedIcon sx={{ fontSize: { xs: 26, sm: 30 } }} />}
+            <Typography component="h1" variant="h5" sx={{ fontWeight: 900, letterSpacing: 0, fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
               {mode === 3 ? 'Try Cat' : 'Try Fish'}
             </Typography>
             <Chip
@@ -246,36 +244,29 @@ function App() {
           <Stack direction="row" spacing={0.5}>
             {import.meta.env.DEV && (
               <Tooltip title="Reset current game">
-                <IconButton color="inherit" onClick={resetCurrentGame} aria-label="Reset current game">
+                <IconButton size="small" color="inherit" onClick={resetCurrentGame} aria-label="Reset current game">
                   <RestartAltRoundedIcon />
                 </IconButton>
               </Tooltip>
             )}
+            <Tooltip title={`Switch to ${mode === 3 ? 'Try Fish' : 'Try Cat'}`}>
+              <IconButton
+                size="small"
+                color="inherit"
+                onClick={toggleMode}
+                aria-label={`Switch to ${mode === 3 ? 'Try Fish' : 'Try Cat'}`}
+              >
+                {mode === 3 ? <SetMealRoundedIcon /> : <PetsRoundedIcon />}
+              </IconButton>
+            </Tooltip>
             <Tooltip title="How to play">
-              <IconButton color="inherit" onClick={() => setRulesOpen(true)} aria-label="How to play">
+              <IconButton size="small" color="inherit" onClick={() => setRulesOpen(true)} aria-label="How to play">
                 <HelpOutlineRoundedIcon />
               </IconButton>
             </Tooltip>
           </Stack>
         </Toolbar>
       </AppBar>
-
-      <Paper square elevation={1}>
-        <Container maxWidth="sm" disableGutters>
-          <Tabs
-            value={mode}
-            onChange={selectMode}
-            variant="fullWidth"
-            aria-label="Choose daily word game"
-            textColor="primary"
-            indicatorColor="secondary"
-            sx={{ '& .MuiTab-root': { minHeight: 56, fontWeight: 800 } }}
-          >
-            <Tab value={3} icon={<PetsRoundedIcon />} iconPosition="start" label="Try Cat (3)" />
-            <Tab value={4} icon={<SetMealRoundedIcon />} iconPosition="start" label="Try Fish (4)" />
-          </Tabs>
-        </Container>
-      </Paper>
 
       <Container maxWidth="sm" sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, sm: 3 } }}>
         <Stack spacing={2} sx={{ alignItems: 'center' }}>
@@ -289,17 +280,6 @@ function App() {
               bgcolor: 'background.paper',
             }}
           >
-            <Stack
-              direction="row"
-              sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}
-            >
-              <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 800 }}>
-                DAILY PUZZLE
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                {game.guesses.length} / 6 tries
-              </Typography>
-            </Stack>
             <Box
               role="grid"
               aria-label={`${mode}-letter word board`}
