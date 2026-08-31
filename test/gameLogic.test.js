@@ -92,7 +92,7 @@ test('invalid guesses do not consume an attempt', () => {
 
   assert.deepEqual(nextGame.guesses, []);
   assert.equal(nextGame.status, 'playing');
-  assert.match(nextGame.message, /word list/i);
+  assert.match(nextGame.message, /Sorry/i);
 });
 
 test('a repeated guess does not consume another attempt', () => {
