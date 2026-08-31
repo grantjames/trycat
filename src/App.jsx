@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Paper,
   Stack,
   Toolbar,
   Tooltip,
@@ -291,65 +290,54 @@ function App() {
 
       <Container maxWidth="sm" sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 2, sm: 3 } }}>
         <Stack spacing={2} sx={{ alignItems: 'center' }}>
-          <Paper
-            elevation={2}
+          <Box
+            role="grid"
+            aria-label={`${mode}-letter word board`}
             sx={{
-              width: '100%',
-              borderRadius: '8px',
-              py: { xs: 2, sm: 2.5 },
-              px: { xs: 1.5, sm: 2.5 },
-              bgcolor: 'background.paper',
+              width: mode === 3 ? 206 : 248,
+              maxWidth: '100%',
+              mx: 'auto',
+              display: 'grid',
+              gap: '7px',
             }}
           >
-            <Box
-              role="grid"
-              aria-label={`${mode}-letter word board`}
-              sx={{
-                width: mode === 3 ? 206 : 248,
-                maxWidth: '100%',
-                mx: 'auto',
-                display: 'grid',
-                gap: '7px',
-              }}
-            >
-              {boardRows.map((row, rowIndex) => (
-                <Box
-                  role="row"
-                  key={`row-${rowIndex}`}
-                  sx={{ display: 'grid', gridTemplateColumns: `repeat(${mode}, 1fr)`, gap: '7px' }}
-                >
-                  {row.map((cell, columnIndex) => {
-                    const style = STATUS_STYLES[cell.status];
-                    const statusLabel = cell.status === 'empty' ? 'not scored' : cell.status;
-                    return (
-                      <Box
-                        role="gridcell"
-                        aria-label={`Row ${rowIndex + 1}, letter ${columnIndex + 1}: ${cell.letter || 'blank'}, ${statusLabel}`}
-                        key={`cell-${rowIndex}-${columnIndex}`}
-                        sx={{
-                          aspectRatio: '1',
-                          borderRadius: '6px',
-                          borderWidth: `${style.borderWidth}px`,
-                          borderStyle: style.borderStyle,
-                          borderColor: style.border,
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          backgroundColor: style.background,
-                          color: style.color,
-                          fontSize: mode === 3 ? 28 : 24,
-                          fontWeight: 900,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {cell.letter}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ))}
-            </Box>
-          </Paper>
+            {boardRows.map((row, rowIndex) => (
+              <Box
+                role="row"
+                key={`row-${rowIndex}`}
+                sx={{ display: 'grid', gridTemplateColumns: `repeat(${mode}, 1fr)`, gap: '7px' }}
+              >
+                {row.map((cell, columnIndex) => {
+                  const style = STATUS_STYLES[cell.status];
+                  const statusLabel = cell.status === 'empty' ? 'not scored' : cell.status;
+                  return (
+                    <Box
+                      role="gridcell"
+                      aria-label={`Row ${rowIndex + 1}, letter ${columnIndex + 1}: ${cell.letter || 'blank'}, ${statusLabel}`}
+                      key={`cell-${rowIndex}-${columnIndex}`}
+                      sx={{
+                        aspectRatio: '1',
+                        borderRadius: '6px',
+                        borderWidth: `${style.borderWidth}px`,
+                        borderStyle: style.borderStyle,
+                        borderColor: style.border,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: style.background,
+                        color: style.color,
+                        fontSize: mode === 3 ? 28 : 24,
+                        fontWeight: 900,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {cell.letter}
+                    </Box>
+                  );
+                })}
+              </Box>
+            ))}
+          </Box>
 
           <Alert
             severity={game.status === 'won'
@@ -367,16 +355,10 @@ function App() {
             {statusMessage}
           </Alert>
 
-          <Paper
+          <Box
             component="section"
             aria-label="On-screen keyboard"
-            variant="outlined"
-            sx={{
-              width: '100%',
-              p: { xs: 1, sm: 1.5 },
-              borderRadius: '8px',
-              bgcolor: 'background.paper',
-            }}
+            sx={{ width: '100%' }}
           >
             {KEY_ROWS.map((row, rowIndex) => (
               <Box
@@ -387,7 +369,7 @@ function App() {
                     ? '1.35fr repeat(7, minmax(0, 1fr)) 1.15fr'
                     : `repeat(${row.length}, minmax(0, 1fr))`,
                   gap: { xs: '3px', sm: '6px' },
-                  mb: { xs: '4px', sm: '7px' },
+                  mb: rowIndex === KEY_ROWS.length - 1 ? 0 : { xs: '4px', sm: '7px' },
                   px: rowIndex === 1 ? { xs: 1.5, sm: 2.5 } : 0,
                 }}
               >
@@ -406,13 +388,13 @@ function App() {
                       sx={{
                         minWidth: 0,
                         width: '100%',
-                        height: { xs: 42, sm: 46 },
+                        height: { xs: 48, sm: 52 },
                         px: 0,
                         borderRadius: '6px',
                         border: `${style.borderWidth}px ${style.borderStyle} ${style.border}`,
                         backgroundColor: style.background,
                         color: style.color,
-                        fontSize: { xs: '0.78rem', sm: '0.9rem' },
+                        fontSize: { xs: '0.9rem', sm: '1rem' },
                         fontWeight: 900,
                         '&:hover': { backgroundColor: style.background },
                       }}
@@ -425,7 +407,7 @@ function App() {
                 })}
               </Box>
             ))}
-          </Paper>
+          </Box>
         </Stack>
       </Container>
 
