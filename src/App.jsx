@@ -36,6 +36,7 @@ import {
 import { getDailyWordProgress } from './wordBank.js';
 
 const MODES = [3, 4];
+const MODE_PREFERENCE_KEY = 'trycat-preferred-mode';
 const KEY_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
@@ -65,6 +66,16 @@ function writeStorage(key, value) {
   }
 }
 
+function loadModePreference() {
+  const storedMode = Number(readStorage(MODE_PREFERENCE_KEY));
+  const hasPreference = MODES.includes(storedMode);
+  const hasUsedApp = readStorage('trycat-rules-seen') === 'true';
+  return {
+    mode: hasPreference ? storedMode : 3,
+    needsChoice: !hasPreference && !hasUsedApp,
+  };
+}
+
 function loadGames(dayKey, date) {
   return Object.fromEntries(MODES.map((length) => [
     length,
@@ -82,7 +93,11 @@ function createDailyState(date = new Date()) {
 }
 
 function App() {
-  const [mode, setMode] = useState(3);
+  const [initialModePreference] = useState(loadModePreference);
+  const [mode, setMode] = useState(initialModePreference.mode);
+  const [modeChoiceOpen, setModeChoiceOpen] = useState(
+    initialModePreference.needsChoice,
+  );
   const [daily, setDaily] = useState(createDailyState);
   const [rulesOpen, setRulesOpen] = useState(
     () => readStorage('trycat-rules-seen') !== 'true',
@@ -182,7 +197,7 @@ function App() {
 
   useEffect(() => {
     const handlePhysicalKey = (event) => {
-      if (rulesOpen || daily.finished) return;
+      if (modeChoiceOpen || rulesOpen || daily.finished) return;
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -199,10 +214,16 @@ function App() {
 
     window.addEventListener('keydown', handlePhysicalKey);
     return () => window.removeEventListener('keydown', handlePhysicalKey);
-  }, [daily.finished, handleKey, rulesOpen]);
+  }, [daily.finished, handleKey, modeChoiceOpen, rulesOpen]);
+
+  const selectMode = (nextMode) => {
+    setMode(nextMode);
+    writeStorage(MODE_PREFERENCE_KEY, String(nextMode));
+    setModeChoiceOpen(false);
+  };
 
   const toggleMode = () => {
-    setMode((currentMode) => currentMode === 3 ? 4 : 3);
+    selectMode(mode === 3 ? 4 : 3);
   };
 
   const closeRules = () => {
@@ -408,7 +429,12 @@ function App() {
         </Stack>
       </Container>
 
-      <Dialog open={rulesOpen && !daily.finished} onClose={closeRules} maxWidth="xs" fullWidth>
+      <Dialog
+        open={rulesOpen && !modeChoiceOpen && !daily.finished}
+        onClose={closeRules}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>How to play</DialogTitle>
         <DialogContent>
           <Stack spacing={1.5}>
@@ -422,6 +448,89 @@ function App() {
         <DialogActions>
           <Button variant="contained" onClick={closeRules} autoFocus>Let&apos;s play</Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog
+        fullScreen
+        open={modeChoiceOpen && !daily.finished}
+        aria-labelledby="choose-game-title"
+        aria-describedby="choose-game-description"
+      >
+        <Box
+          sx={{
+            minHeight: '100dvh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
+            px: 3,
+            py: 5,
+            textAlign: 'center',
+            bgcolor: 'background.default',
+          }}
+        >
+          <Box>
+            <Typography
+              id="choose-game-title"
+              component="h2"
+              variant="h3"
+              sx={{ fontWeight: 900, fontSize: { xs: '2rem', sm: '3rem' } }}
+            >
+              Choose your game
+            </Typography>
+            <Typography
+              id="choose-game-description"
+              color="text.secondary"
+              sx={{ mt: 1, fontSize: '1.1rem' }}
+            >
+              Which word length would you like to start with?
+            </Typography>
+          </Box>
+
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ width: '100%', maxWidth: 520 }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => selectMode(3)}
+              sx={{ flex: 1, minHeight: 112, borderRadius: '8px' }}
+            >
+              <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
+                <PetsRoundedIcon sx={{ fontSize: 38 }} />
+                <Typography component="span" variant="h6" sx={{ fontWeight: 900 }}>
+                  Try Cat
+                </Typography>
+                <Typography component="span" variant="body2">
+                  3-letter words
+                </Typography>
+              </Stack>
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => selectMode(4)}
+              sx={{ flex: 1, minHeight: 112, borderRadius: '8px' }}
+            >
+              <Stack spacing={0.5} sx={{ alignItems: 'center' }}>
+                <SetMealRoundedIcon sx={{ fontSize: 38 }} />
+                <Typography component="span" variant="h6" sx={{ fontWeight: 900 }}>
+                  Try Fish
+                </Typography>
+                <Typography component="span" variant="body2">
+                  4-letter words
+                </Typography>
+              </Stack>
+            </Button>
+          </Stack>
+
+          <Typography color="text.secondary" sx={{ maxWidth: 460 }}>
+            You can switch games at any time using the Cat or Fish icon in the app bar.
+          </Typography>
+        </Box>
       </Dialog>
 
       <Dialog
