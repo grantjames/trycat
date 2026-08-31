@@ -38,18 +38,31 @@ const VALID_GUESSES = {
 
 const START_DATE = Date.UTC(2026, 7, 31);
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+export const TOTAL_DAILY_WORDS = 100;
 
-export function getDailyWord(length, today = new Date()) {
-  if (!WORDS[length]) {
-    throw new Error('Invalid word length. Only 3 or 4 letter words are supported.');
-  }
+export function getDailyWordProgress(today = new Date()) {
   const todayDate = Date.UTC(
     today.getFullYear(),
     today.getMonth(),
     today.getDate(),
   );
   const elapsedDays = Math.floor((todayDate - START_DATE) / DAY_IN_MS);
-  const dayIndex = Math.max(0, elapsedDays) % WORDS[length].length;
+  const dayIndex = Math.max(0, elapsedDays);
+
+  return {
+    dayIndex,
+    wordNumber: Math.min(dayIndex + 1, TOTAL_DAILY_WORDS),
+    totalWords: TOTAL_DAILY_WORDS,
+    finished: dayIndex >= TOTAL_DAILY_WORDS,
+  };
+}
+
+export function getDailyWord(length, today = new Date()) {
+  if (!WORDS[length]) {
+    throw new Error('Invalid word length. Only 3 or 4 letter words are supported.');
+  }
+  const { dayIndex, finished } = getDailyWordProgress(today);
+  if (finished) return undefined;
   return WORDS[length][dayIndex];
 }
 

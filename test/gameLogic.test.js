@@ -12,7 +12,9 @@ import {
 import {
   DAILY_WORDS_3,
   DAILY_WORDS_4,
+  TOTAL_DAILY_WORDS,
   getDailyWord,
+  getDailyWordProgress,
   isValidGuess,
 } from '../src/wordBank.js';
 import { VALID_GUESSES_3, VALID_GUESSES_4 } from '../src/validGuesses.js';
@@ -30,6 +32,30 @@ test('daily words begin at index zero and advance by local calendar day', () => 
 
 test('dates before launch safely use the first word', () => {
   assert.equal(getDailyWord(3, new Date(2026, 7, 1, 12)), DAILY_WORDS_3[0]);
+});
+
+test('daily progress finishes only after all 100 words have been used', () => {
+  assert.deepEqual(getDailyWordProgress(START_DATE), {
+    dayIndex: 0,
+    wordNumber: 1,
+    totalWords: 100,
+    finished: false,
+  });
+  assert.deepEqual(getDailyWordProgress(new Date(2026, 11, 8, 12)), {
+    dayIndex: 99,
+    wordNumber: 100,
+    totalWords: 100,
+    finished: false,
+  });
+  assert.deepEqual(getDailyWordProgress(new Date(2026, 11, 9, 12)), {
+    dayIndex: 100,
+    wordNumber: 100,
+    totalWords: 100,
+    finished: true,
+  });
+  assert.equal(getDailyWord(3, new Date(2026, 11, 9, 12)), undefined);
+  assert.equal(DAILY_WORDS_3.length, TOTAL_DAILY_WORDS);
+  assert.equal(DAILY_WORDS_4.length, TOTAL_DAILY_WORDS);
 });
 
 test('local date keys do not use UTC calendar dates', () => {

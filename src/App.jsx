@@ -4,6 +4,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Container,
   Dialog,
   DialogActions,
@@ -19,6 +20,7 @@ import {
   Typography,
 } from '@mui/material';
 import BackspaceRoundedIcon from '@mui/icons-material/BackspaceRounded';
+import CelebrationRoundedIcon from '@mui/icons-material/CelebrationRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import KeyboardReturnRoundedIcon from '@mui/icons-material/KeyboardReturnRounded';
 import PetsRoundedIcon from '@mui/icons-material/PetsRounded';
@@ -33,6 +35,7 @@ import {
   restoreGame,
   submitGuess,
 } from './gameLogic.js';
+import { getDailyWordProgress } from './wordBank.js';
 
 const MODES = [3, 4];
 const KEY_ROWS = [
@@ -73,7 +76,11 @@ function loadGames(dayKey, date) {
 
 function createDailyState(date = new Date()) {
   const dayKey = getLocalDateKey(date);
-  return { dayKey, games: loadGames(dayKey, date) };
+  return {
+    dayKey,
+    games: loadGames(dayKey, date),
+    ...getDailyWordProgress(date),
+  };
 }
 
 function App() {
@@ -92,7 +99,7 @@ function App() {
     const nextDayKey = getLocalDateKey(now);
     setDaily((previous) => {
       if (previous.dayKey === nextDayKey) return previous;
-      return { dayKey: nextDayKey, games: loadGames(nextDayKey, now) };
+      return createDailyState(now);
     });
   }, []);
 
@@ -177,7 +184,7 @@ function App() {
 
   useEffect(() => {
     const handlePhysicalKey = (event) => {
-      if (rulesOpen) return;
+      if (rulesOpen || daily.finished) return;
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -194,7 +201,7 @@ function App() {
 
     window.addEventListener('keydown', handlePhysicalKey);
     return () => window.removeEventListener('keydown', handlePhysicalKey);
-  }, [handleKey, rulesOpen]);
+  }, [daily.finished, handleKey, rulesOpen]);
 
   const selectMode = (_, nextMode) => {
     setMode(nextMode);
@@ -224,6 +231,17 @@ function App() {
             <Typography component="h1" variant="h5" sx={{ fontWeight: 900, letterSpacing: 0 }}>
               {mode === 3 ? 'Try Cat' : 'Try Fish'}
             </Typography>
+            <Chip
+              label={`${daily.wordNumber}/${daily.totalWords}`}
+              size="small"
+              aria-label={`Word ${daily.wordNumber} of ${daily.totalWords}`}
+              sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.16)',
+                border: '1px solid rgba(255, 255, 255, 0.34)',
+                color: 'inherit',
+                fontWeight: 900,
+              }}
+            />
           </Stack>
           <Stack direction="row" spacing={0.5}>
             {import.meta.env.DEV && (
@@ -410,7 +428,7 @@ function App() {
         </Stack>
       </Container>
 
-      <Dialog open={rulesOpen} onClose={closeRules} maxWidth="xs" fullWidth>
+      <Dialog open={rulesOpen && !daily.finished} onClose={closeRules} maxWidth="xs" fullWidth>
         <DialogTitle>How to play</DialogTitle>
         <DialogContent>
           <Stack spacing={1.5}>
@@ -424,6 +442,34 @@ function App() {
         <DialogActions>
           <Button variant="contained" onClick={closeRules} autoFocus>Let&apos;s play</Button>
         </DialogActions>
+      </Dialog>
+
+      <Dialog
+        fullScreen
+        open={daily.finished}
+        aria-labelledby="game-finished-title"
+      >
+        <Box
+          sx={{
+            minHeight: '100dvh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            px: 3,
+            textAlign: 'center',
+            bgcolor: 'background.default',
+          }}
+        >
+          <CelebrationRoundedIcon color="secondary" sx={{ fontSize: 72 }} />
+          <Typography id="game-finished-title" component="h2" variant="h3" sx={{ fontWeight: 900 }}>
+            Game finished
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 480 }}>
+            All 100 days of Try Cat and Try Fish are complete. Thanks for playing!
+          </Typography>
+        </Box>
       </Dialog>
     </Box>
   );
