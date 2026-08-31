@@ -95,7 +95,7 @@ export function submitGuess(game) {
 
   const guess = game.currentGuess.toLowerCase();
   if (!isValidGuess(guess, game.mode)) {
-    return { ...game, message: 'Try a word from the word list.' };
+    return { ...game, message: 'Sorry, this isn\'t a valid word.' };
   }
   if (game.guesses.includes(guess)) {
     return { ...game, message: "You've already tried this word" };
